@@ -4,11 +4,11 @@ from crewai import Agent, Task, Process, Crew
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.llms import Ollama
 
-# To Load Local models through Ollama
-mistral = Ollama(model="mistral")
-
 # To Load GPT-4
-api = os.environ.get("OPENAI_API_KEY")
+# api = os.environ.get("OPENAI_API_KEY")
+
+# To Load Local models through Ollama
+# llm = Ollama(model="mistral")
 
 # To load gemini (this api is for free: https://makersuite.google.com/app/apikey)
 api_gemini = os.environ.get("GEMINI-API-KEY")
@@ -25,7 +25,7 @@ marketer = Agent(
 		""",
     verbose=True,  # enable more detailed or extensive output
     allow_delegation=True,  # enable collaboration between agent
-    #   llm=llm # to load gemini
+    llm=llm    # load ollama 或 gemini
 )
 
 technologist = Agent(
@@ -38,7 +38,7 @@ technologist = Agent(
 		operational efficiency but also provides a competitive edge in the market.""",
     verbose=True,  # enable more detailed or extensive output
     allow_delegation=True,  # enable collaboration between agent
-    #   llm=llm # to load gemini
+    llm=llm    # load ollama 或 gemini
 )
 
 business_consultant = Agent(
@@ -47,10 +47,10 @@ business_consultant = Agent(
     backstory="""You are a seasoned professional with expertise in shaping business strategies. Your insight is essential for turning innovative ideas 
 		into viable business models. You have a keen understanding of various industries and are adept at identifying and developing potential revenue streams. 
 		Your experience in scalability ensures that a business can grow without compromising its values or operational efficiency. Your advice is not just
-		about immediate gains but about building a resilient and adaptable business that can thrive in a changing market.""",
+		about immediate gains but about building a resilient and adaptable business that can thrive in a changing market. You are expert in using traditional chinese to write the report.""",
     verbose=True,  # enable more detailed or extensive output
     allow_delegation=True,  # enable collaboration between agent
-    #   llm=llm # to load gemini
+    llm=llm    # load ollama 或 gemini
 )
 
 task1 = Task(
@@ -74,6 +74,7 @@ task3 = Task(
 		description of how to make a sustainable and profitable "plugs for crocs (shoes) so that this iconic footware looks less like swiss cheese" business. 
 		The business plan has to be concise with 
 		at least 10  bullet points, 5 goals and it has to contain a time schedule for which goal should be achieved and when.
+    You should use traditional chinese to write the Final report.
     """,
     agent=business_consultant,
 )

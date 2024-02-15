@@ -1,11 +1,14 @@
-# 這是原始版本，呼叫的大模型是 gpt4，除了要花錢之外，受限於長度限制，只會輸出2條結果。
-import os
+# 這個版本改成可以呼叫 Ollama 或 Gemini Pro 的大模型
+# pip install crewai duckduckgo-search langchain-google-genai
 
+import os
 from langchain.agents import Tool
 from langchain.agents import load_tools
+from langchain.llms import Ollama
 
 from crewai import Agent, Task, Process, Crew
 from langchain.utilities import GoogleSerperAPIWrapper
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # to get your api key for free, visit and signup: https://serper.dev/
 # os.environ["SERPER_API_KEY"] = "serp-api-here"
@@ -22,8 +25,18 @@ search_tool = Tool(
 human_tools = load_tools(["human"])
 
 # To Load GPT-4
-api = os.environ.get("OPENAI_API_KEY")
+# api = os.environ.get("OPENAI_API_KEY")
 
+# To Load Local models through Ollama
+# llm = Ollama(model="mistral")
+
+# Use Gemini Pro
+llm = ChatGoogleGenerativeAI(
+    model = "gemini-pro",
+    verbose = True,
+    temperature = 0.6,
+    google_api_key = os.environ["GOOGLE_API_KEY"]
+    )
 
 """
 - define agents that are going to research latest AI tools and write a blog about it 
@@ -40,6 +53,7 @@ explorer = Agent(
     """,
     verbose=True,
     allow_delegation=False,
+    llm = llm,
     tools=[search_tool],
 )
 
@@ -51,6 +65,7 @@ writer = Agent(
     fun way by using layman words.ONLY use scraped data from the internet for the blog. You are expert in using traditional chinese to write the report.""",
     verbose=True,
     allow_delegation=True,
+    llm = llm,
 )
 critic = Agent(
     role="Expert Writing Critic",
@@ -61,6 +76,7 @@ critic = Agent(
     """,
     verbose=True,
     allow_delegation=True,
+    llm = llm,
 )
 
 task_report = Task(
@@ -91,7 +107,6 @@ task_blog = Task(
     agent=writer,
 )
 
-# 下面的 description 導致 AI 只翻譯下面的格式為中文，但不是依照搜尋結果產生報告，笨
 task_critique = Task(
     description="""Your report should Reference the following English markdown format but translate it to traditional chinese.
     ```

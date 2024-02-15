@@ -5,7 +5,7 @@ import os
 from langchain.tools import tool
 from langchain.llms import Ollama
 from crewai import Agent, Task, Process, Crew
-
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from langchain.agents import load_tools
 
@@ -13,11 +13,16 @@ from langchain.agents import load_tools
 human_tools = load_tools(["human"])
 
 # To Load GPT-4
-api = os.environ.get("OPENAI_API_KEY")
-
+# api = os.environ.get("OPENAI_API_KEY")
 
 # To Load Local models through Ollama
-mistral = Ollama(model="mistral")
+# llm = Ollama(model="mistral")
+
+# To load gemini (this api is for free: https://makersuite.google.com/app/apikey)
+api_gemini = os.environ.get("GEMINI-API-KEY")
+llm = ChatGoogleGenerativeAI(
+    model="gemini-pro", verbose=True, temperature=0.1, google_api_key=api_gemini
+)
 
 
 class BrowserTool:
@@ -70,7 +75,7 @@ explorer = Agent(
     verbose=True,
     allow_delegation=False,
     tools=[BrowserTool().scrape_reddit] + human_tools,
-    llm=mistral,  # remove to use default gpt-4
+    llm=llm,  # remove to use default gpt-4
 )
 
 writer = Agent(
@@ -81,18 +86,18 @@ writer = Agent(
     fun way by using layman words.ONLY use scraped data from LocalLLama subreddit for the blog.""",
     verbose=True,
     allow_delegation=True,
-    llm=mistral,  # remove to use default gpt-4
+    llm=llm,  # remove to use default gpt-4
 )
 critic = Agent(
     role="Expert Writing Critic",
     goal="Provide feedback and criticize blog post drafts. Make sure that the tone and writing style is compelling, simple and concise",
     backstory="""You are an Expert at providing feedback to the technical writers. You can tell when a blog text isn't concise,
     simple or engaging enough. You know how to provide helpful feedback that can improve any text. You know how to make sure that text 
-    stays technical and insightful by using layman terms.
+    stays technical and insightful by using layman terms. You are expert in using traditional chinese to write the report.
     """,
     verbose=True,
     allow_delegation=True,
-    llm=mistral,  # remove to use default gpt-4
+    llm=llm,  # remove to use default gpt-4
 )
 
 task_report = Task(
@@ -110,7 +115,7 @@ task_blog = Task(
     layman words for the general public. Name specific new, exciting projects, apps and companies in AI world. Don't 
     write "**Paragraph [number of the paragraph]:**", instead start the new paragraph in a new line. Write names of projects and tools in BOLD.
     ALWAYS include links to projects/tools/research papers. ONLY include information from LocalLLAma.
-    For your Outputs use the following markdown format:
+    Your report should Reference the following English markdown format but translate it to traditional chinese.
     ```
     ## [Title of post](link to project)
     - Interesting facts
@@ -124,7 +129,7 @@ task_blog = Task(
 )
 
 task_critique = Task(
-    description="""The Output MUST have the following markdown format:
+    description="""Your report should Reference the following English markdown format but translate it to traditional chinese.
     ```
     ## [Title of post](link to project)
     - Interesting facts
